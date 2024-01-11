@@ -6,8 +6,8 @@
 
 # useful for handling different item types with a single interface
 from itemadapter import ItemAdapter
-import json
-import os
+# import json
+# import os
 import psycopg2
 
 class BookscraperPipeline:
@@ -62,16 +62,25 @@ class BookscraperPipeline:
 
 class SaveToPostgresPipeline:
 
-    def __init__(self):
-        parent_directory = os.path.split(os.path.split(os.path.dirname(__file__))[0])[0]
-        file_path = os.path.join(parent_directory, 'credentials.json')
-        with open(file_path, 'r') as f:
-            credentials = json.load(f)
+    @classmethod
+    def from_crawler(cls, crawler):
+        return cls(crawler.settings)
 
-        hostname=credentials["hostname"]
-        database=credentials["database"]
-        username=credentials["username"]
-        password=credentials["password"]
+    def __init__(self, settings):
+        # parent_directory = os.path.split(os.path.split(os.path.dirname(__file__))[0])[0]
+        # file_path = os.path.join(parent_directory, 'credentials.json')
+        # with open(file_path, 'r') as f:
+        #     credentials = json.load(f)
+
+        # hostname=credentials["hostname"]
+        # database=credentials["database"]
+        # username=credentials["username"]
+        # password=credentials["password"]
+
+        hostname = settings.get("POSTGRES_HOSTNAME")
+        database = settings.get("POSTGRES_DATABASE")
+        username = settings.get("POSTGRES_USERNAME")
+        password = settings.get("POSTGRES_PASSWORD")
 
         self.connection = psycopg2.connect(host=hostname, user=username, password=password, dbname=database)
         self.cur = self.connection.cursor()

@@ -4,10 +4,11 @@
 # https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
 from scrapy import signals
-
+from urllib.parse import urlencode
 # useful for handling different item types with a single interface
 from itemadapter import is_item, ItemAdapter
-
+import requests
+import random
 
 class BookscraperSpiderMiddleware:
     # Not all methods need to be defined. If a method is not defined,
@@ -101,3 +102,42 @@ class BookscraperDownloaderMiddleware:
 
     def spider_opened(self, spider):
         spider.logger.info("Spider opened: %s" % spider.name)
+
+class ScrapeOpsFakeBrowserHeaderAgentMiddleware:
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        return cls(crawler.settings)
+    
+    def __init__(self, settings):
+        self.scrapeops_api_key = settings.get("SCRAPEOPS_API_KEY")
+        self.scrapeops_endpoint = settings.get("SCRAPEOPS_FAKE_BROWSER_HEADER_ENDPOINT") 
+        self.scrapeops_fake_browser_headers_active = settings.get("SCRAPEOPS_FAKE_BROWSER_HEADER_ENABLED")
+        self.scrapeops_num_results = settings.get("SCRAPEOPS_NUM_RESULTS")
+        self.headers_list = []
+        self._get_headers_list()
+        self._get_random_header()
+
+    def _get_headers_list(self):
+        # https://scrapeops.io/app/headers
+        params={
+            "api_key": self.scrapeops_api_key,
+            "num_results": self.scrapeops_num_results
+        }
+        response = requests.get(self.scrapeops_endpoint, params=params)
+        json_response = response.json()
+        self.headers_list = json_response.get("result", [])
+        # print(f"*****{json_response}******")
+
+    def _get_random_header(self):
+        rand_num = random.randint(0, len(self.headers_list)-1)
+        return self.headers_list[rand_num]
+
+    def process_request(self, request, spider):
+        browser_header = self._get_random_header()
+        print("****** ATTACHED NEW HEADER ********")
+        header_keys = browser_header.keys()
+        for header_key in header_keys:
+            request.headers[header_key] = browser_header[header_key]
+        print(request.headers)
+

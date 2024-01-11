@@ -7,20 +7,43 @@
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
+import json
+import os
+
+
 BOT_NAME = "bookscraper"
 
 SPIDER_MODULES = ["bookscraper.spiders"]
 NEWSPIDER_MODULE = "bookscraper.spiders"
 
-# FEEDS = {
-#     'data.csv': {'format': 'csv'}
-# }
+# Get Postgres credentials
+
+parent_directory = os.path.split(os.path.split(os.path.dirname(__file__))[0])[0]
+file_path = os.path.join(parent_directory, 'credentials.json')
+with open(file_path, 'r') as f:
+    credentials = json.load(f)
+
+POSTGRES_HOSTNAME=credentials["hostname"]
+POSTGRES_DATABASE=credentials["database"]
+POSTGRES_USERNAME=credentials["username"]
+POSTGRES_PASSWORD=credentials["password"]
+
+SCRAPEOPS_API_KEY = credentials["scrapeops_api"]
+SCRAPEOPS_FAKE_BROWSER_HEADER_ENDPOINT = 'https://headers.scrapeops.io/v1/browser-headers'
+SCRAPEOPS_FAKE_BROWSER_HEADER_ENABLED = True
+SCRAPEOPS_NUM_RESULTS = 5  # number of fake headers 
+
+
+FEEDS = {
+    'data.json': {'format': 'json'}
+}
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = "bookscraper (+http://www.yourdomain.com)"
 
 # Obey robots.txt rules
-ROBOTSTXT_OBEY = True
+ROBOTSTXT_OBEY = False
+# Set to false when scraping sites with anti-bot measures
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32
@@ -53,9 +76,10 @@ ROBOTSTXT_OBEY = True
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
-#DOWNLOADER_MIDDLEWARES = {
+DOWNLOADER_MIDDLEWARES = {
 #    "bookscraper.middlewares.BookscraperDownloaderMiddleware": 543,
-#}
+   "bookscraper.middlewares.ScrapeOpsFakeBrowserHeaderAgentMiddleware": 600,
+}
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html
