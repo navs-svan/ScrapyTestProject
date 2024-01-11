@@ -91,7 +91,7 @@ DOWNLOADER_MIDDLEWARES = {
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
    "bookscraper.pipelines.BookscraperPipeline": 300,
-#    "bookscraper.pipelines.SaveToPostgresPipeline": 400
+   "bookscraper.pipelines.SaveToPostgresPipeline": 400
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
